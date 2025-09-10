@@ -1,14 +1,42 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+use serde::{Deserialize, Serialize};
+use std::sync::Arc;
+
+pub mod utils;
+
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub enum FromClient {
+    Join {
+        group_name: Arc<String>,
+    },
+    Post {
+        group_name: Arc<String>,
+        message: Arc<String>,
+    },
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+pub enum FromServer {
+    Message {
+        group_name: Arc<String>,
+        message: Arc<String>,
+    },
+    Error(String),
+}
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
+#[test]
+fn test_from_client_json() {
+    use std::sync::Arc;
+
+    let from_client = FromClient::Post {
+        group_name: Arc::new("Dogs".to_string()),
+        message: Arc::new("Hello".to_string()),
+    };
+
+    let json = serde_json::to_string(&from_client).unwrap();
+
+    assert_eq!(json, r#"{"Post":{"group_name":"Dogs","message":"Hello"}}"#);
+    assert_eq!(
+        serde_json::from_str::<FromClient>(&json).unwrap(),
+        from_client
+    );
 }
